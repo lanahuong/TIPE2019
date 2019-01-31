@@ -13,7 +13,7 @@ class Simulation:
         self.intersections = []
         self.entrances = []
         self.exits = []
-        self.pressure = 0.8
+        self.pressure = 0.9
         self.size = size
         self.w = Canvas(master, width=width, height=height)
         self.w.pack()
@@ -38,6 +38,11 @@ class Simulation:
             elif b[0] == TOC.Out:
                 self.entrances.remove(b[1])
 
+    def random_start(self, p):
+        for r in self.roads:
+            r.random_start(p)
+
+
     def next_step(self):
         # move cars in intersections
         for inter in self.intersections:
@@ -54,10 +59,6 @@ class Simulation:
         for e in self.exits:
             if self.roads[e]:
                 self.roads[e].cells[-1] = None
-
-    def make_city(self, city):
-        return
-
 
     def show_graph(self):
         self.w.delete("all")
@@ -104,11 +105,11 @@ class Simulation:
                         #self.w.create_line(x, y, x+a, y+b, width=1)
 
         img = Image.fromarray(data)
-        img = img.resize((10*self.size, 10*self.size))
+        img = img.resize((7*self.size, 7*self.size))
         photo = ImageTk.PhotoImage(img)
         self.w.create_image(photo.width()/2,photo.height()/2,image=photo)
         self.w.update()
-        time.sleep(0.5)
+        time.sleep(0.3)
 
     def print_all(self):
         for road in self.roads:
@@ -315,38 +316,90 @@ class Intersection:
         # Copy to the state list
         self.states.append(self.cells[:])
 
+"""
 simulation = Simulation(700, 700, 23)
+
+
+# 4 way intersection
 
 simulation.add_road(10,1,0, 0,11)
 simulation.add_road(10,0,-1, 11, 22)
-#simulation.add_road(10,1,0, 13, 11)
+simulation.add_road(10,1,0, 13, 11)
 simulation.add_road(10,0,-1, 11, 10)
+
+branches = [(TOC.In,0), (TOC.In,1), (TOC.Out,2), (TOC.Out,3)]
+simulation.add_intersection(branches, 12, 12)
 """
-city_map = { roads: [(10,1,0), (10,1,0), (10,1,0), (11,1,0), (10,1,0), (10,1,0), # 6
-                     (10,1,0), # 1
-                     (10,-1,0), (10,-1,0), (10,-1,0), (10,-1,0), (10,-1,0), (10,-1,0), # 6
-                     (10,1,0), (10,1,0), # 2
-                     (10,-1,0), (10,-1,0), (10,-1,0), # 3
-                     (10,1,0), (10,1,0), (10,1,0), (11,1,0), (10,1,0), (10,1,0), # 6
-                     # Vertical
-                     (10,0,-1), (24,0,-1), (24,0,-1), (10,0,-1), (10,0,-1), # 5
-                     (10,0,1), (11,0,1), (10,0,1), (24,0,1), (10,0,1), (10,0,1), # 6
-                     (10,0,-1),(11,0,-1),(10,0,-1), (11,0,-1), (10,0,-1), (10,0,-1), # 6
-                     (10,0,1), (24,0,1), (10,0,1), (24,0,1), # 4
-                     (10,0,-1), (24,0,-1), (10,0,-1), (24,0,-1), (10,0,-1)], # 5
 
-             intersections: [[(TOC.In,0), (TOC.In,20), (TOC.Out,1), (TOC.Out,19)],
-                             [(TOC.In,1), (TOC.Out,25), (TOC.Out,2), (TOC.In,24)]],
-             size: 75}"""
+""" 
+# 3 way intersection
 
-# Size of the city : 6*10 + 3*5 = 75
+simulation.add_road(10,1,0, 0,11)
+simulation.add_road(10,0,-1, 11, 22)
+simulation.add_road(10,0,-1, 11, 10)
 
 branches = [(TOC.In,0), (TOC.In,1), (TOC.No,None), (TOC.Out,2)]
 simulation.add_intersection(branches, 12, 12)
 
-print(simulation)
+"""
 
-for _ in range(50):
+city_map = { 'roads': [(10,1,0,0,11), (10,1,0,13,11), (10,1,0,26,11), (10,1,0,39,11), (10,1,0,52,11), (10,1,0,65,11), # 6
+                     (10,1,0,26,24), # 1
+                     (10,-1,0,9,37), (10,-1,0,22,37), (10,-1,0,35,37), (10,-1,0,48,37), (10,-1,0,62,37), (10,-1,0,74,37), # 6
+                     (10,1,0,39,50), (10,1,0,52,50), # 2
+                     (10,-1,0,9,63), (10,-1,0,22,63), (10,-1,0,35,63), # 3
+                     (10,1,0,0,76), (10,1,0,13,76), (10,1,0,26,76), (10,1,0,39,76), (10,1,0,52,76), (10,1,0,65,76), # 6
+                     # Vertical
+                     (10,0,-1,11,9), (23,0,-1,11,36), (23,0,-1,11,62), (10,0,-1,11,74), (10,0,-1,11,87), # 5
+                     (10,0,1,24,0), (10,0,1,24,13), (10,0,1,24,27), (23,0,1,24,40), (10,0,1,24,66), (10,0,1,24,79), # 6
+                     (10,0,-1,37,10),(10,0,-1,37,22),(10,0,-1,37,36), (10,0,-1,37,48), (10,0,-1,37,61), (10,0,-1,37,75), (10,0,-1,37,87), # 7
+                     (10,0,1,50,0), (23,0,1,50,14), (10,0,1,50,40), (23,0,1,50,53), # 4
+                     (10,0,-1,63,10), (23,0,-1,63,36), (10,0,-1,63,49), (23,0,-1,63,75), (10,0,-1,63,87)], # 5
+
+             'intersections': [([(TOC.In,0), (TOC.In,25), (TOC.Out,1), (TOC.Out,24)],(12,12)),
+                             ([(TOC.In,1), (TOC.Out,30), (TOC.Out,2), (TOC.In,29)],(25,12)),
+                             ([(TOC.In,2), (TOC.In,36), (TOC.Out,3), (TOC.Out,35)],(38,12)),
+                             ([(TOC.In,3), (TOC.Out,43), (TOC.Out,4), (TOC.In,42)],(51,12)),
+                             ([(TOC.In,4), (TOC.In,47), (TOC.Out,5), (TOC.Out,46)],(64,12)),
+                             
+                             ([(TOC.No,None), (TOC.Out,31), (TOC.Out,6), (TOC.In,30)],(25,25)),
+                             ([(TOC.In,6), (TOC.In,37), (TOC.No,None), (TOC.Out,36)],(38,25)),
+                             
+                             ([(TOC.Out,7), (TOC.In,26), (TOC.In,8), (TOC.Out,25)],(12,38)),
+                             ([(TOC.Out,8), (TOC.Out,32), (TOC.In,9), (TOC.In,31)],(25,38)),
+                             ([(TOC.Out,9), (TOC.In,38), (TOC.In,10), (TOC.Out,37)],(38,38)),
+                             ([(TOC.Out,10), (TOC.Out,44), (TOC.In,11), (TOC.In,43)],(51,38)),
+                             ([(TOC.Out,11), (TOC.In,48), (TOC.In,12), (TOC.Out,47)],(64,38)),
+                             
+                             ([(TOC.No,None), (TOC.In,39), (TOC.Out,13), (TOC.Out,38)],(38,51)),
+                             ([(TOC.In,13), (TOC.Out,45), (TOC.Out,14), (TOC.In,44)],(51,51)),
+                             ([(TOC.In,14), (TOC.In,49), (TOC.No,None), (TOC.Out,48)],(64,51)),
+                             
+                             ([(TOC.Out,15), (TOC.In,27), (TOC.In,16), (TOC.Out,28)],(12,64)),
+                             ([(TOC.Out,16), (TOC.Out,33), (TOC.In,17), (TOC.In,32)],(25,64)),
+                             ([(TOC.Out,17), (TOC.In,40), (TOC.No,None), (TOC.Out,39)],(38,64)),
+                             
+                             ([(TOC.In,18), (TOC.In,28), (TOC.Out,19), (TOC.Out,27)],(12,77)),
+                             ([(TOC.In,19), (TOC.Out,34), (TOC.Out,20), (TOC.In,33)],(25,77)),
+                             ([(TOC.In,20), (TOC.In,41), (TOC.Out,21), (TOC.Out,40)],(38,77)),
+                             ([(TOC.In,21), (TOC.No,None), (TOC.Out,22), (TOC.In,45)],(51,77)),
+                             ([(TOC.In,22), (TOC.In,50), (TOC.Out,23), (TOC.Out,49)],(64,77))
+                             ],
+             'size': 90}
+
+simulation = Simulation(700,700,city_map['size'])
+
+for r in city_map['roads']:
+    simulation.add_road(r[0],r[1],r[2],r[3],r[4])
+
+for i in city_map['intersections']:
+    simulation.add_intersection(i[0],i[1][0],i[1][1])
+
+simulation.random_start(0.45)
+
+
+
+for _ in range(200):
     simulation.next_step()
     simulation.show_graph()
 
