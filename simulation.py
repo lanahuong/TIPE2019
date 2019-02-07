@@ -240,6 +240,7 @@ class Intersection:
         self.states = [list(self.cells)]
         self.x = x
         self.y = y
+        self.field_I = 0
         self.cars_stopped = []
         self.entrances = []
         self.waysout = []
@@ -300,6 +301,9 @@ class Intersection:
                     elif ruling == 'empty':
                         self.cells[i] = None
 
+        #update the intensity of the field
+        self.field_I = saturation*5
+
 
     def next_step(self):
 
@@ -315,6 +319,16 @@ class Intersection:
 
         # Copy to the state list
         self.states.append(self.cells[:])
+
+def potential_at_mouse(event):
+    x,y = event.x/7,event.y/7
+    P = 0
+    for i in simulation.intersections:
+        d2 = (x-i.x)**2 + (y-i.y)**2
+        P += -i.field_I/d2
+    print(P)
+
+master.bind('<Button>',potential_at_mouse)
 
 """
 simulation = Simulation(700, 700, 23)
