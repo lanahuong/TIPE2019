@@ -60,6 +60,35 @@ class Simulation:
             if self.roads[e]:
                 self.roads[e].cells[-1] = None
 
+    def show_graph_start(self):
+        self.w.delete("all")
+
+        data = numpy.zeros((self.size,self.size,3), dtype=numpy.uint8)
+
+        # for each road
+        for road in self.roads:
+            x = road.x
+            y = road.y
+            for i in range(len(road)):
+                if isinstance(road.cells[i],Voiture):
+                    if road.cells[i].chosen:
+                        data[y, x] = road.cells[i].color
+                        dr, dc = road.cells[i].destination
+
+                x += road.dx
+                y += road.dy
+
+        x = self.roads[dr].x + self.roads[dr].dx * dc
+        y = self.roads[dr].y + self.roads[dr].dy * dc
+        data[y, x] = (0,255,0)
+
+        img = Image.fromarray(data)
+        img = img.resize((7*self.size, 7*self.size))
+        photo = ImageTk.PhotoImage(img)
+        self.w.create_image(photo.width()/2,photo.height()/2,image=photo)
+        self.w.update()
+
+
     def show_graph(self):
         self.w.delete("all")
         data = numpy.zeros((self.size,self.size,3), dtype=numpy.uint8)
@@ -109,7 +138,6 @@ class Simulation:
         photo = ImageTk.PhotoImage(img)
         self.w.create_image(photo.width()/2,photo.height()/2,image=photo)
         self.w.update()
-        time.sleep(0.3)
 
     def print_all(self):
         for road in self.roads:
@@ -120,9 +148,12 @@ class Simulation:
 class Voiture:
     def __init__(self):
         self.speed = 1
-        self.color = (0,0,0)
-        while self.color[0]==self.color[1] and self.color[1]==self.color[2]:
-            self.color = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
+        self.color = (255,255,255)
+        self.destination = None
+        self.chosen = False
+        # Random color
+        #while self.color[0]==self.color[1] and self.color[1]==self.color[2]:
+        #    self.color = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
 
     def __repr__(self):
         return str(1)
@@ -330,6 +361,23 @@ def potential_at_mouse(event):
 
 master.bind('<Button>',potential_at_mouse)
 
+# Choose a car change it's color to red and pick a destination
+def choose_car(simulation):
+    #randomly pick a car
+    r = random.randint(0,len(simulation.roads)-1)
+    c = random.randint(0,len(simulation.roads[r].cells)-1)
+    while simulation.roads[r].cells[c] == None:
+        c = random.randint(0,len(simulation.roads[r].cells)-1)
+
+    #randomly pick a destination
+    dr = random.randint(0,len(simulation.roads)-1)
+    dc = random.randint(0,len(simulation.roads[r].cells)-1)
+    # Give the car it's destination
+    simulation.roads[r].cells[c].destination = (dr,dc)
+    # Red car
+    simulation.roads[r].cells[c].color = (255,0,0)
+    simulation.roads[r].cells[c].chosen = True
+
 """
 simulation = Simulation(700, 700, 23)
 
@@ -411,9 +459,15 @@ for i in city_map['intersections']:
 
 simulation.random_start(0.45)
 
+# Choose a car randomly
+choose_car(simulation)
 
+# Show the chosen car in red and it's destination in green for 3 seconds
+simulation.show_graph_start()
+time.sleep(3)
 
 for _ in range(200):
     simulation.next_step()
     simulation.show_graph()
+    time.sleep(0.3)
 
