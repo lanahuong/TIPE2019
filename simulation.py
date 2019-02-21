@@ -399,12 +399,15 @@ def choose_car(simulation):
     #randomly pick a car
     r = random.randint(0,len(simulation.roads)-1)
     c = random.randint(0,len(simulation.roads[r].cells)-1)
-    while simulation.roads[r].cells[c] == None:
+    while simulation.roads[r].cells[c] == None or r in simulation.exits:
         c = random.randint(0,len(simulation.roads[r].cells)-1)
 
     #randomly pick a destination
     dr = random.randint(0,len(simulation.roads)-1)
     dc = random.randint(0,len(simulation.roads[r].cells)-1)
+    if dr in simulation.entrances:
+        dr = random.randint(0,len(simulation.roads)-1)
+        dc = random.randint(0,len(simulation.roads[r].cells)-1)
     # Give the car it's destination
     simulation.roads[r].cells[c].destination = (dr,dc)
     # Red car
