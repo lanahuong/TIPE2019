@@ -249,6 +249,10 @@ class Road:
                     self.cells[0] = None
             elif ruling == 'empty':
                 self.cells[i] = None
+            if isinstance(self.cells[i], Voiture) and self.cells[i].chosen:
+                dr, dc = self.cells[i].destination
+                if dc == i and dr == self.simul.roads.index(self):
+                    print("Goal !")
 
 
         # Last cell
@@ -378,9 +382,29 @@ class Intersection:
         for ind in self.entrances:
             # if the cell of entrance from this road is free and there is a car waiting, let the car in
             if self.cells[ind] == None and isinstance(self.simul.roads[self.conf[ind][1]].cells[-1], Voiture):
-                wayout = random.randint(0,len(self.waysout)-1)
-                self.cells[ind] = (self.simul.roads[self.conf[ind][1]].cells[-1], self.waysout[wayout])
-                self.simul.roads[self.conf[ind][1]].cells[-1] = None
+                # if the car is the interesting one it chooses it's direction with the potential field
+                if self.simul.roads[self.conf[ind][1]].cells[-1].chosen:
+                    potentials = []
+                    dr, dc = self.simul.roads[self.conf[ind][1]].cells[-1].destination
+                    for w in self.waysout:
+                        x = self.x + self.simul.roads[self.conf[w][1]].dx
+                        y = self.y + self.simul.roads[self.conf[w][1]].dy
+                        P = 0
+                        for i in self.simul.intersections:
+                             d2 = (x-i.x)**2 + (y-i.y)**2
+                             P += -i.field_I/d2
+
+                        dx = self.simul.roads[dr].x + self.simul.roads[dr].dx * dc
+                        dy = self.simul.roads[dr].y + self.simul.roads[dr].dy * dc
+                        P += 100000/((x-dx)**2 + (y-dy)**2)
+                        potentials.append((P,w))
+                    potentials.sort(key=lambda l: -l[0])
+                    self.cells[ind] = (self.simul.roads[self.conf[ind][1]].cells[-1], potentials[0][1])
+                    self.simul.roads[self.conf[ind][1]].cells[-1] = None
+                else:
+                    wayout = random.randint(0,len(self.waysout)-1)
+                    self.cells[ind] = (self.simul.roads[self.conf[ind][1]].cells[-1], self.waysout[wayout])
+                    self.simul.roads[self.conf[ind][1]].cells[-1] = None
 
         # Copy to the state list
         self.states.append(self.cells[:])
