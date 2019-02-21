@@ -335,9 +335,10 @@ class Intersection:
                 saturation += 1
                 if cur[1] == i:
                 # if the road's entrance is free, speak friend and enter
-                    self.simul.roads[self.conf[i][1]].cells[0] = cur[0]
-                    self.cells[i] = None
-                    saturation -= 1
+                    if self.simul.roads[self.conf[i][1]].cells[0] == None:
+                        self.simul.roads[self.conf[i][1]].cells[0] = cur[0]
+                        self.cells[i] = None
+                        saturation -= 1
                 # else don't move
         # adjust the saturation to avoid issues in 3 way intersections
         # ie : cars from one road are completely blocked
