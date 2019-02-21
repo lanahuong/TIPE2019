@@ -74,9 +74,36 @@ class Simulation:
                     if road.cells[i].chosen:
                         data[y, x] = road.cells[i].color
                         dr, dc = road.cells[i].destination
+                    else:
+                        data[y, x] = (120,120,120)
+                else:
+                    data[y, x] = (120,120,120)
 
                 x += road.dx
                 y += road.dy
+
+        # for each intersection
+        for inter in self.intersections:
+            if len(inter)==4:
+
+                x = inter.x-1
+                y = inter.y-1
+
+                locations = [(-1,0), (0,1), (1,0), (0,-1)]
+                for i in range(len(inter)):
+                    a, b = locations[i]
+                    data[y+b, x+a] = (120,120,120)
+
+            if len(inter)==3:
+
+                x = inter.x
+                y = inter.y
+
+                locations = [(0,0), (self.roads[inter.conf[0][1]].dx,self.roads[inter.conf[0][1]].dy),
+                             (self.roads[inter.conf[2][1]].dx,self.roads[inter.conf[2][1]].dy)]
+                for i in range(len(inter)):
+                    a, b = locations[i]
+                    data[y+b, x+a] = (120,120,120)
 
         x = self.roads[dr].x + self.roads[dr].dx * dc
         y = self.roads[dr].y + self.roads[dr].dy * dc
@@ -103,6 +130,8 @@ class Simulation:
                 if isinstance(road.cells[i],Voiture):
                     data[y, x] = road.cells[i].color
                     #self.w.create_line(x, y, x+road.dx, y+road.dy, width=1)
+                else:
+                    data[y, x] = (120,120,120)
                 x += road.dx
                 y += road.dy
 
@@ -115,10 +144,12 @@ class Simulation:
 
                 locations = [(-1,0), (0,1), (1,0), (0,-1)]
                 for i in range(len(inter)):
+                    a, b = locations[i]
                     if inter.cells[i]:
-                        a, b = locations[i]
                         data[y+b, x+a] = inter.cells[i][0].color
                         #self.w.create_line(x, y, x+a, y+b, width=1)
+                    else:
+                        data[y+b, x+a] = (120,120,120)
 
             if len(inter)==3:
 
@@ -128,10 +159,12 @@ class Simulation:
                 locations = [(0,0), (self.roads[inter.conf[0][1]].dx,self.roads[inter.conf[0][1]].dy),
                              (self.roads[inter.conf[2][1]].dx,self.roads[inter.conf[2][1]].dy)]
                 for i in range(len(inter)):
+                    a, b = locations[i]
                     if inter.cells[i]:
-                        a, b = locations[i]
                         data[y+b, x+a] = inter.cells[i][0].color
                         #self.w.create_line(x, y, x+a, y+b, width=1)
+                    else:
+                        data[y+b, x+a] = (120,120,120)
 
         img = Image.fromarray(data)
         img = img.resize((7*self.size, 7*self.size))
