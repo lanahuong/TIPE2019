@@ -13,7 +13,7 @@ class Simulation:
         self.intersections = []
         self.entrances = []
         self.exits = []
-        self.pressure = 0.9
+        self.pressure = 0.2
         self.size = size
         self.w = Canvas(master, width=width, height=height)
         self.w.pack()
@@ -59,6 +59,8 @@ class Simulation:
         for e in self.exits:
             if self.roads[e]:
                 self.roads[e].cells[-1] = None
+
+        self.age += 1
 
     def show_graph_start(self):
         self.w.delete("all")
@@ -180,10 +182,12 @@ class Simulation:
 
 class Voiture:
     def __init__(self):
-        self.speed = 1
+        self.lifeExpectancy = int(random.expovariate(0.01))
         self.color = (255,255,255)
         self.destination = None
         self.chosen = False
+        while self.lifeExpectancy<30 or self.lifeExpectancy>250:
+            self.lifeExpectancy = random.expovariate(0.01)
         # Random color
         #while self.color[0]==self.color[1] and self.color[1]==self.color[2]:
         #    self.color = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
@@ -237,7 +241,7 @@ class Road:
         #elif not isinstance(self.cells[1], Voiture):
         #    self.cells[0] = None
 
-        # All all cells in the middle
+        # All cells in the middle
         for i in range(1,len(self)-1):
             prev = self.states[-1][i-1]
             cur = self.states[-1][i]
@@ -247,6 +251,10 @@ class Road:
                 self.cells[i] = prev
                 if i == 1:
                     self.cells[0] = None
+                # Manage life expectancy
+                self.cells[i].lifeExpectancy -= 1
+                if self.cells[i].lifeExpectancy == 0:
+                    self.cells[i] = None
             elif ruling == 'empty':
                 self.cells[i] = None
             if isinstance(self.cells[i], Voiture) and self.cells[i].chosen:
@@ -260,6 +268,10 @@ class Road:
         cur = nex
         if isinstance(prev,Voiture) and not isinstance(cur,Voiture):
             self.cells[-1] = prev
+            # Manage life expectancy
+            self.cells[-1].lifeExpectancy -= 1
+            if self.cells[-1].lifeExpectancy == 0:
+                self.cells[-1] = None
         #elif isinstance(nex,Voiture):
         #    self.cells[-1] = None
 
@@ -292,6 +304,7 @@ class Road:
             w.update()
             time.sleep(0.03)
 
+# Type Of Cell
 class TOC(Enum):
     No = 0
     In = 1
@@ -341,6 +354,10 @@ class Intersection:
                 # if the road's entrance is free, speak friend and enter
                     if self.simul.roads[self.conf[i][1]].cells[0] == None:
                         self.simul.roads[self.conf[i][1]].cells[0] = cur[0]
+                        #Manage life expectancy
+                        self.simul.roads[self.conf[i][1]].cells[0].lifeExpectancy -=1
+                        if self.simul.roads[self.conf[i][1]].cells[0].lifeExpectancy == 0:
+                            self.simul.roads[self.conf[i][1]].cells[0] = None
                         self.cells[i] = None
                         saturation -= 1
                 # else don't move
@@ -354,6 +371,11 @@ class Intersection:
                 last = self.cells[-1]
                 for i in range(1,len(self)):
                     self.cells[len(self)-i] = self.cells[len(self)-1-i]
+                    #Manage life expectancy
+                    if self.cells[len(self)-i] != None:
+                        self.cells[len(self)-i][0].lifeExpectancy -= 1
+                        if self.cells[len(self)-i][0].lifeExpectancy == 0:
+                            self.cells[len(self)-i] = None
                 self.cells[0] = last
 
         # if the intersection is not saturated, move normally
@@ -367,6 +389,9 @@ class Intersection:
                     ruling = rules[((prev != None),(cur != None),(nex != None))]
                     if ruling == 'next':
                         self.cells[i] = prev
+                        self.cells[i][0].lifeExpectancy -= 1
+                        if self.cells[i][0].lifeExpectancy == 0:
+                            self.cells[i] = None
                     elif ruling == 'empty':
                         self.cells[i] = None
 
@@ -404,6 +429,9 @@ class Intersection:
                 else:
                     wayout = random.randint(0,len(self.waysout)-1)
                     self.cells[ind] = (self.simul.roads[self.conf[ind][1]].cells[-1], self.waysout[wayout])
+                    self.cells[ind][0].lifeExpectancy -= 1
+                    if self.cells[ind][0].lifeExpectancy == 0:
+                        self.cells[ind] = None
                     self.simul.roads[self.conf[ind][1]].cells[-1] = None
 
         # Copy to the state list
@@ -438,6 +466,7 @@ def choose_car(simulation):
     # Red car
     simulation.roads[r].cells[c].color = (255,0,0)
     simulation.roads[r].cells[c].chosen = True
+    simulation.roads[r].cells[c].lifeExpectancy = 250
 
 """
 simulation = Simulation(700, 700, 23)
