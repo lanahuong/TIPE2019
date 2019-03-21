@@ -42,6 +42,17 @@ class Simulation:
         for r in self.roads:
             r.random_start(p)
 
+    # Focused car
+        # Car starts at
+        self.roads[20].cells[6] = Voiture()
+        self.roads[20].cells[6].color = (255,0,0)
+        self.roads[20].cells[6].chosen = True
+        self.roads[20].cells[6].lifeExpectancy = 250
+
+        # Car's destination
+        self.roads[20].cells[6].destination = (5,3)
+
+        self.roads[20].states[-1][6] = self.roads[20].cells[6]
 
     def next_step(self):
         # move cars in intersections
