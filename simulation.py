@@ -1,4 +1,5 @@
 from tkinter import *
+from math import sqrt
 #from tkinter.ttk import *
 import random, time
 from enum import Enum
@@ -592,6 +593,25 @@ for _ in range(100):
         #time.sleep(0.1)
     simulation.clear()
 
-print(simulation.travelDistance)
-print(simulation.travelTime)
+meanD = sum(simulation.travelDistance)/len(simulation.travelDistance)
+sdD = sqrt(sum(map(lambda l: (l-meanD)**2, simulation.travelDistance))/len(simulation.travelDistance))
+meanT = sum(simulation.travelTime)/len(simulation.travelTime)
+sdT = sqrt(sum(map(lambda l: (l-meanT)**2, simulation.travelDistance))/len(simulation.travelTime))
+waitedT = list(map(lambda x: x[0]-x[1],zip(simulation.travelTime,simulation.travelDistance)))
+meanW = sum(waitedT)/len(waitedT)
+sdW = sqrt(sum(map(lambda l: (l-meanW)**2, waitedT))/len(waitedT))
 
+#print(simulation.travelDistance)
+#print(simulation.travelTime)
+#print(waitedT)
+
+print('Mean distance : ' + str(meanD))
+print('Standard deviation : ' + str(sdD))
+print('Mean time : ' + str(meanT))
+print('Standard deviation : ' + str(sdT))
+print('Min : ' + str(min(simulation.travelTime)))
+print('Max : ' + str(max(simulation.travelTime)))
+print('Mean time waited : ' + str(meanW))
+print('Standard deviation : ' + str(sdW))
+print('Min : ' + str(min(waitedT)))
+print('Max : ' + str(max(waitedT)))
