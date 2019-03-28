@@ -42,7 +42,7 @@ class Simulation:
         for r in self.roads:
             r.random_start(p)
 
-    # Focused car
+        # Focused car
         # Car starts at
         self.roads[20].cells[6] = Voiture()
         self.roads[20].cells[6].color = (255,0,0)
@@ -70,8 +70,6 @@ class Simulation:
         for e in self.exits:
             if self.roads[e]:
                 self.roads[e].cells[-1] = None
-
-        self.age += 1
 
     def show_graph_start(self):
         self.w.delete("all")
