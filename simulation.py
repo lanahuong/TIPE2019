@@ -47,7 +47,7 @@ class Simulation:
 
         # Focused car
         # Car starts at
-        self.roads[20].cells[6] = Voiture()
+        self.roads[20].cells[6] = Car()
         self.roads[20].cells[6].color = (255,0,0)
         self.roads[20].cells[6].chosen = True
         self.roads[20].cells[6].lifeExpectancy = 250
@@ -97,7 +97,7 @@ class Simulation:
             x = road.x
             y = road.y
             for i in range(len(road)):
-                if isinstance(road.cells[i],Voiture):
+                if isinstance(road.cells[i],Car):
                     if road.cells[i].chosen:
                         data[y, x] = road.cells[i].color
                         dr, dc = road.cells[i].destination
@@ -146,17 +146,14 @@ class Simulation:
     def show_graph(self):
         self.w.delete("all")
         data = numpy.zeros((self.size,self.size,3), dtype=numpy.uint8)
-        img = Image.fromarray(data)
-        img = img.resize((10*self.size, 10*self.size))
-        #img.show()
+
         # for each road
         for road in self.roads:
             x = road.x
             y = road.y
             for i in range(len(road)):
-                if isinstance(road.cells[i],Voiture):
+                if isinstance(road.cells[i],Car):
                     data[y, x] = road.cells[i].color
-                    #self.w.create_line(x, y, x+road.dx, y+road.dy, width=1)
                 else:
                     data[y, x] = (120,120,120)
                 x += road.dx
@@ -174,7 +171,6 @@ class Simulation:
                     a, b = locations[i]
                     if inter.cells[i]:
                         data[y+b, x+a] = inter.cells[i][0].color
-                        #self.w.create_line(x, y, x+a, y+b, width=1)
                     else:
                         data[y+b, x+a] = (120,120,120)
 
@@ -189,7 +185,6 @@ class Simulation:
                     a, b = locations[i]
                     if inter.cells[i]:
                         data[y+b, x+a] = inter.cells[i][0].color
-                        #self.w.create_line(x, y, x+a, y+b, width=1)
                     else:
                         data[y+b, x+a] = (120,120,120)
 
@@ -205,7 +200,7 @@ class Simulation:
         for inter in self.intersections:
             print(inter)
 
-class Voiture:
+class Car:
     def __init__(self):
         self.lifeExpectancy = int(random.expovariate(0.01))
         self.color = (255,255,255)
@@ -223,7 +218,7 @@ class Voiture:
 def random_car(p):
     output = random.random()
     if output<p:
-        return Voiture()
+        return Car()
     return None
 
 rules = {(True,True,True):'stay',
@@ -250,7 +245,7 @@ class Road:
         self.states = [self.cells[:]]
 
     def clear(self):
-        self.cells = [None for _ in range(self.cells)]
+        self.cells = [None for _ in range(len(self.cells))]
         self.states = [self.cells[:]]
 
     def __len__(self):
@@ -265,9 +260,9 @@ class Road:
 
     def next_step(self):
         # 1st cell
-        #if not isinstance(self.cells[0], Voiture):
+        #if not isinstance(self.cells[0], Car):
         #    self.cells[0] = random_car(0.8)
-        #elif not isinstance(self.cells[1], Voiture):
+        #elif not isinstance(self.cells[1], Car):
         #    self.cells[0] = None
 
         # All cells in the middle
@@ -275,7 +270,7 @@ class Road:
             prev = self.states[-1][i-1]
             cur = self.states[-1][i]
             nex = self.states[-1][i+1]
-            ruling = rules[(isinstance(prev,Voiture),isinstance(cur,Voiture),isinstance(nex,Voiture))]
+            ruling = rules[(isinstance(prev,Car),isinstance(cur,Car),isinstance(nex,Car))]
             if ruling == 'next':
                 self.cells[i] = prev
                 if i == 1:
@@ -286,7 +281,7 @@ class Road:
                     self.cells[i] = None
             elif ruling == 'empty':
                 self.cells[i] = None
-            if isinstance(self.cells[i], Voiture) and self.cells[i].chosen:
+            if isinstance(self.cells[i], Car) and self.cells[i].chosen:
                 dr, dc = self.cells[i].destination
                 if dc == i and dr == self.simul.roads.index(self):
                     self.simul.travelDistance.append(250 - self.cells[i].lifeExpectancy)
@@ -297,13 +292,13 @@ class Road:
         # Last cell
         prev = cur
         cur = nex
-        if isinstance(prev,Voiture) and not isinstance(cur,Voiture):
+        if isinstance(prev,Car) and not isinstance(cur,Car):
             self.cells[-1] = prev
             # Manage life expectancy
             self.cells[-1].lifeExpectancy -= 1
             if self.cells[-1].lifeExpectancy == 0:
                 self.cells[-1] = None
-        #elif isinstance(nex,Voiture):
+        #elif isinstance(nex,Car):
         #    self.cells[-1] = None
 
         # Copy to the state list
@@ -315,7 +310,7 @@ class Road:
         y = 5
         for i in range(self.age()):
             for j in range(len(self)):
-                if isinstance(self.states[i][j],Voiture):
+                if isinstance(self.states[i][j],Car):
                     w.create_line(x, y, x+size, y, width=size)
                 x += size
             y += size
@@ -328,7 +323,7 @@ class Road:
         for i in range(self.age()):
             w.delete('all')
             for j in range(len(self)):
-                if isinstance(self.states[i][j],Voiture):
+                if isinstance(self.states[i][j],Car):
                     w.create_line(x, y, x+size, y, width=size)
                 x += size
             x = 5
@@ -341,8 +336,9 @@ class TOC(Enum):
     In = 1
     Out = 2
 
+# What's in an object
 # branches [(type_of_cell, index_in_road_list) ...]
-# cells = [(Voiture, Out) or None]
+# cells = [(Car, Out) or None]
 
 class Intersection:
     def __init__(self, simul, branches, x, y):
@@ -370,7 +366,7 @@ class Intersection:
         return string
 
     def clear(self):
-        self.cells = [None for _ in range(self.cells)]
+        self.cells = [None for _ in range(len(self.cells))]
         self.states = [list(self.cells)]
 
     def age(self):
@@ -441,7 +437,7 @@ class Intersection:
         # Cars enter the intersection if they can
         for ind in self.entrances:
             # if the cell of entrance from this road is free and there is a car waiting, let the car in
-            if self.cells[ind] == None and isinstance(self.simul.roads[self.conf[ind][1]].cells[-1], Voiture):
+            if self.cells[ind] == None and isinstance(self.simul.roads[self.conf[ind][1]].cells[-1], Car):
                 # if the car is the interesting one it chooses it's direction with the potential field
                 if self.simul.roads[self.conf[ind][1]].cells[-1].chosen:
                     potentials = []
@@ -472,6 +468,7 @@ class Intersection:
         # Copy to the state list
         self.states.append(self.cells[:])
 
+# Check if potential works
 def potential_at_mouse(event):
     x,y = event.x/7,event.y/7
     P = 0
@@ -529,7 +526,7 @@ branches = [(TOC.In,0), (TOC.In,1), (TOC.No,None), (TOC.Out,2)]
 simulation.add_intersection(branches, 12, 12)
 
 """
-
+# My city
 city_map = { 'roads': [(10,1,0,0,11), (10,1,0,13,11), (10,1,0,26,11), (10,1,0,39,11), (10,1,0,52,11), (10,1,0,65,11), # 6
                      (10,1,0,26,24), # 1
                      (10,-1,0,9,37), (10,-1,0,22,37), (10,-1,0,35,37), (10,-1,0,48,37), (10,-1,0,61,37), (10,-1,0,74,37), # 6
@@ -582,16 +579,18 @@ for r in city_map['roads']:
 for i in city_map['intersections']:
     simulation.add_intersection(i[0],i[1][0],i[1][1])
 
-simulation.random_start(0.45)
+for _ in range(100):
+    simulation.random_start(0.45)
 
-# Show the chosen car in red and it's destination in green for 3 seconds
-simulation.show_graph_start()
-time.sleep(3)
+    # Show the chosen car in red and it's destination in green for 3 seconds
+    #simulation.show_graph_start()
+    #time.sleep(3)
 
-for _ in range(200):
-    simulation.next_step()
-    simulation.show_graph()
-    time.sleep(0.1)
+    for _ in range(200):
+        simulation.next_step()
+        #simulation.show_graph()
+        #time.sleep(0.1)
+    simulation.clear()
 
 print(simulation.travelDistance)
 print(simulation.travelTime)
