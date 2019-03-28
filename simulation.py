@@ -8,15 +8,18 @@ from PIL import Image, ImageTk
 master = Tk()
 
 class Simulation:
-    def __init__(self, width, height, size):
+    def __init__(self, width, height, size, p):
         self.roads = []
         self.intersections = []
         self.entrances = []
         self.exits = []
-        self.pressure = 0.2
+        self.pressure = p
         self.size = size
         self.w = Canvas(master, width=width, height=height)
         self.w.pack()
+        self.travelTime = []
+        self.travelDistance = []
+        self.focusedCar = True
 
     def __repr__(self):
         string = "Roads : "+str(self.roads)+"\n"
@@ -54,7 +57,20 @@ class Simulation:
 
         self.roads[20].states[-1][6] = self.roads[20].cells[6]
 
+        #
+        self.travelTime.append(0)
+        self.focusedCar = True
+
+    def clear(self):
+        for r in self.roads:
+            r.clear()
+        for i in self.intersections:
+            i.clear()
+
     def next_step(self):
+        # Track travel time
+        if self.focusedCar :
+            self.travelTime[-1] += 1
         # move cars in intersections
         for inter in self.intersections:
             inter.next_step()
@@ -233,6 +249,10 @@ class Road:
         self.cells = [random_car(p) for _ in range(len(self))]
         self.states = [self.cells[:]]
 
+    def clear(self):
+        self.cells = [None for _ in range(self.cells)]
+        self.states = [self.cells[:]]
+
     def __len__(self):
         return len(self.cells)
 
@@ -269,7 +289,9 @@ class Road:
             if isinstance(self.cells[i], Voiture) and self.cells[i].chosen:
                 dr, dc = self.cells[i].destination
                 if dc == i and dr == self.simul.roads.index(self):
-                    print("Goal !")
+                    self.simul.travelDistance.append(250 - self.cells[i].lifeExpectancy)
+                    self.simul.focusedCar = False
+                    self.cells[i] = None
 
 
         # Last cell
@@ -346,6 +368,10 @@ class Intersection:
     def __repr__(self):
         string = str(self.cells)
         return string
+
+    def clear(self):
+        self.cells = [None for _ in range(self.cells)]
+        self.states = [list(self.cells)]
 
     def age(self):
         return len(self.states)
@@ -548,7 +574,7 @@ city_map = { 'roads': [(10,1,0,0,11), (10,1,0,13,11), (10,1,0,26,11), (10,1,0,39
                              ],
              'size': 90}
 
-simulation = Simulation(700,700,city_map['size'])
+simulation = Simulation(700,700,city_map['size'],0.2)
 
 for r in city_map['roads']:
     simulation.add_road(r[0],r[1],r[2],r[3],r[4])
@@ -558,9 +584,6 @@ for i in city_map['intersections']:
 
 simulation.random_start(0.45)
 
-# Choose a car randomly
-choose_car(simulation)
-
 # Show the chosen car in red and it's destination in green for 3 seconds
 simulation.show_graph_start()
 time.sleep(3)
@@ -568,5 +591,8 @@ time.sleep(3)
 for _ in range(200):
     simulation.next_step()
     simulation.show_graph()
-    time.sleep(0.3)
+    time.sleep(0.1)
+
+print(simulation.travelDistance)
+print(simulation.travelTime)
 
