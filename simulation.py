@@ -581,7 +581,7 @@ for i in city_map['intersections']:
     simulation.add_intersection(i[0],i[1][0],i[1][1])
 
 for _ in range(100):
-    simulation.random_start(0.45)
+    simulation.random_start(0.20)
 
     # Show the chosen car in red and it's destination in green for 3 seconds
     #simulation.show_graph_start()
